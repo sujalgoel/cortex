@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cortex - Schema Explorer</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: #0B0F1A;
+  color: #E2E8F0;
+  min-height: 100vh;
+  display: flex;
+  overflow: hidden;
+}
+
+/* Dot grid pattern */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 24px 24px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  width: 220px;
+  min-width: 220px;
+  height: 100vh;
+  background: #070B14;
+  border-right: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  color: #00E5FF;
+  letter-spacing: 4px;
+  padding: 28px 24px 36px;
+  user-select: none;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 8px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #64748B;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border-left: 2px solid transparent;
+  text-decoration: none;
+  position: relative;
+}
+
+.nav-item:hover {
+  color: #94A3B8;
+  background: rgba(255,255,255,0.02);
+}
+
+.nav-item.active {
+  color: #00E5FF;
+  background: rgba(0,229,255,0.06);
+  border-left-color: #00E5FF;
+}
+
+.nav-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #475569;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 24px 16px 8px 18px;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: 20px 18px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.sidebar-footer-text {
+  font-size: 11px;
+  color: #475569;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ── Table List Panel ── */
+.table-panel {
+  width: 250px;
+  min-width: 250px;
+  height: 100vh;
+  background: #070B14;
+  border-right: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  flex-direction: column;
+  z-index: 1;
+  position: relative;
+}
+
+.table-panel-header {
+  padding: 24px 18px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.table-panel-header h3 {
+  font-family: 'Syne', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #64748B;
+  margin-bottom: 4px;
+}
+
+.db-name {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #E2E8F0;
+}
+
+.db-name .count {
+  color: #64748B;
+  font-weight: 400;
+  margin-left: 4px;
+}
+
+.search-box {
+  margin: 12px 18px 0;
+  padding-bottom: 12px;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px;
+  color: #E2E8F0;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.search-box input::placeholder {
+  color: #475569;
+}
+
+.search-box input:focus {
+  border-color: #00E5FF;
+}
+
+.table-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.table-item {
+  display: flex;
+  align-items: center;
+  padding: 9px 18px;
+  cursor: pointer;
+  border-left: 2px solid transparent;
+  transition: all 0.15s ease;
+}
+
+.table-item:hover {
+  background: rgba(255,255,255,0.02);
+}
+
+.table-item.active {
+  border-left-color: #00E5FF;
+  background: rgba(0,229,255,0.04);
+}
+
+.table-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.table-item-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #94A3B8;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.table-item.active .table-item-name {
+  color: #E2E8F0;
+}
+
+.table-item-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: #475569;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+/* ── Main Content ── */
+.main {
+  flex: 1;
+  height: 100vh;
+  overflow-y: auto;
+  position: relative;
+  z-index: 1;
+}
+
+.main-inner {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 48px 56px;
+}
+
+.breadcrumb {
+  font-size: 12px;
+  color: #475569;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+.breadcrumb .sep {
+  margin: 0 6px;
+  color: #1E293B;
+}
+
+.breadcrumb .current {
+  color: #94A3B8;
+}
+
+.table-title-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.table-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 26px;
+  color: #E2E8F0;
+}
+
+.stat-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 100px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.stat-badge.rows {
+  background: rgba(74,222,128,0.08);
+  color: #4ADE80;
+  border: 1px solid rgba(74,222,128,0.15);
+}
+
+.stat-badge.cols {
+  background: rgba(245,158,11,0.08);
+  color: #F59E0B;
+  border: 1px solid rgba(245,158,11,0.15);
+}
+
+.stat-badge.fks {
+  background: rgba(59,130,246,0.08);
+  color: #3B82F6;
+  border: 1px solid rgba(59,130,246,0.15);
+}
+
+/* ── AI Summary ── */
+.ai-summary {
+  background: rgba(167,139,250,0.04);
+  border: 1px solid rgba(167,139,250,0.1);
+  border-left: 3px solid #A78BFA;
+  border-radius: 8px;
+  padding: 20px 24px;
+  margin-bottom: 32px;
+}
+
+.ai-summary-label {
+  font-family: 'Syne', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #A78BFA;
+  margin-bottom: 10px;
+}
+
+.ai-summary p {
+  font-size: 14px;
+  line-height: 1.75;
+  color: #CBD5E1;
+  font-weight: 400;
+}
+
+/* ── Section Headers ── */
+.section-heading {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  color: #E2E8F0;
+  margin-bottom: 16px;
+}
+
+/* ── Columns Table ── */
+.columns-table-wrap {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 36px;
+}
+
+.columns-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.columns-table thead th {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748B;
+  text-align: left;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.01);
+}
+
+.columns-table tbody tr {
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  transition: background 0.1s;
+}
+
+.columns-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.columns-table tbody tr:hover {
+  background: rgba(255,255,255,0.02);
+}
+
+.columns-table td {
+  padding: 12px 18px;
+  font-size: 13px;
+  vertical-align: middle;
+}
+
+.col-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  color: #E2E8F0;
+}
+
+.col-type {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 400;
+  color: #F59E0B;
+  background: rgba(245,158,11,0.08);
+  padding: 3px 8px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.nullable-yes {
+  font-size: 12px;
+  font-weight: 600;
+  color: #EF4444;
+}
+
+.nullable-no {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4ADE80;
+}
+
+.key-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 10px;
+  border-radius: 100px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.key-badge.pk {
+  background: rgba(245,158,11,0.12);
+  color: #F59E0B;
+  border: 1px solid rgba(245,158,11,0.2);
+}
+
+.key-badge.fk {
+  background: rgba(59,130,246,0.12);
+  color: #3B82F6;
+  border: 1px solid rgba(59,130,246,0.2);
+}
+
+.key-badge.none {
+  color: #334155;
+}
+
+.col-desc {
+  color: #94A3B8;
+  font-size: 13px;
+}
+
+/* ── Relationships ── */
+.rel-card {
+  display: flex;
+  align-items: center;
+  padding: 14px 20px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px;
+  margin-bottom: 10px;
+  transition: border-color 0.15s;
+}
+
+.rel-card:hover {
+  border-color: rgba(255,255,255,0.12);
+}
+
+.rel-source, .rel-target {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.rel-table { color: #94A3B8; }
+.rel-col { color: #00E5FF; }
+.rel-dot { color: #475569; }
+
+.rel-arrow {
+  margin: 0 16px;
+  color: #475569;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.rel-type {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748B;
+  background: rgba(255,255,255,0.03);
+  padding: 4px 12px;
+  border-radius: 100px;
+  border: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
+}
+
+/* Scrollbar */
+.main::-webkit-scrollbar { width: 6px; }
+.main::-webkit-scrollbar-track { background: transparent; }
+.main::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 3px; }
+
+.table-list::-webkit-scrollbar { width: 4px; }
+.table-list::-webkit-scrollbar-track { background: transparent; }
+.table-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="logo">CORTEX</div>
+  <div class="nav-label">Pipeline</div>
+  <nav class="nav">
+    <a class="nav-item" href="01_connect.html">Connect</a>
+    <a class="nav-item active" href="02_schema.html">Schema</a>
+    <a class="nav-item" href="03_quality.html">Quality</a>
+    <a class="nav-item" href="04_chat.html">Chat</a>
+    <a class="nav-item" href="05_export.html">Export</a>
+  </nav>
+  <div class="nav-label">System</div>
+  <nav class="nav">
+    <a class="nav-item" href="06_settings.html">Settings</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-footer-text">v0.1.0</div>
+  </div>
+</aside>
+
+<!-- Table List Panel -->
+<section class="table-panel">
+  <div class="table-panel-header">
+    <h3>Database</h3>
+    <div class="db-name">olist_ecommerce <span class="count">/ 9 tables</span></div>
+  </div>
+  <div class="search-box">
+    <input type="text" placeholder="Search tables..." />
+  </div>
+  <div class="table-list">
+    <div class="table-item active">
+      <span class="table-dot" style="background:#3B82F6"></span>
+      <span class="table-item-name">orders</span>
+      <span class="table-item-count">99,441</span>
+    </div>
+    <div class="table-item">
+      <span class="table-dot" style="background:#8B5CF6"></span>
+      <span class="table-item-name">order_items</span>
+      <span class="table-item-count">112,650</span>
+    </div>
+    <div class="table-item">
+      <span class="table-dot" style="background:#06B6D4"></span>
+      <span class="table-item-name">customers</span>
+      <span class="table-item-count">99,441</span>
+    </div>
+    <div class="table-item">
+      <span class="table-dot" style="background:#F59E0B"></span>
+      <span class="table-item-name">products</span>
+      <span class="table-item-count">32,951</span>
+    </div>
+    <div class="table-item">
+      <span class="table-dot" style="background:#10B981"></span>
+      <span class="table-item-name">sellers</span>
+      <span class="table-item-count">3,095</span>
+    </div>
+    <div class="table-item">
+      <span class="table-dot" style="background:#EC4899"></span>
+      <span class="table-item-name">payments</span>
+      <span class="table-item-count">103,886</span>
+    </div>
+    <div class="table-item">
+      <span class="table-dot" style="background:#EF4444"></span>
+      <span class="table-item-name">reviews</span>
+      <span class="table-item-count">100,000</span>
+    </div>
+    <div class="table-item">
+      <span class="table-dot" style="background:#14B8A6"></span>
+      <span class="table-item-name">geolocation</span>
+      <span class="table-item-count">1,000,163</span>
+    </div>
+    <div class="table-item">
+      <span class="table-dot" style="background:#64748B"></span>
+      <span class="table-item-name">category_translation</span>
+      <span class="table-item-count">71</span>
+    </div>
+  </div>
+</section>
+
+<!-- Main -->
+<main class="main">
+  <div class="main-inner">
+    <div class="breadcrumb">
+      olist_ecommerce <span class="sep">/</span> public <span class="sep">/</span> <span class="current">orders</span>
+    </div>
+
+    <div class="table-title-row">
+      <span class="table-title">orders</span>
+      <span class="stat-badge rows">99,441 rows</span>
+      <span class="stat-badge cols">8 columns</span>
+      <span class="stat-badge fks">3 FKs</span>
+    </div>
+
+    <!-- AI Summary -->
+    <div class="ai-summary">
+      <div class="ai-summary-label">AI-Generated Summary</div>
+      <p>This table tracks every customer order on the Olist marketplace. Each row is one order, identified by order_id. It records which customer placed the order, the current order status (delivered, shipped, canceled), and four timestamps covering purchase, approval, carrier handoff, and delivery. This is the central fact table. Most other tables (order_items, payments, reviews) reference it through order_id. Use order_status to filter for completed vs. in-progress transactions. The gap between purchase_timestamp and delivered_timestamp gives you fulfillment time.</p>
+    </div>
+
+    <!-- Columns -->
+    <h2 class="section-heading">Columns</h2>
+    <div class="columns-table-wrap">
+      <table class="columns-table">
+        <thead>
+          <tr>
+            <th>Column</th>
+            <th>Type</th>
+            <th>Nullable</th>
+            <th>Key</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="col-name">order_id</span></td>
+            <td><span class="col-type">VARCHAR(32)</span></td>
+            <td><span class="nullable-no">NOT NULL</span></td>
+            <td><span class="key-badge pk">PK</span></td>
+            <td><span class="col-desc">Unique order identifier</span></td>
+          </tr>
+          <tr>
+            <td><span class="col-name">customer_id</span></td>
+            <td><span class="col-type">VARCHAR(32)</span></td>
+            <td><span class="nullable-no">NOT NULL</span></td>
+            <td><span class="key-badge fk">FK</span></td>
+            <td><span class="col-desc">References customers.customer_id</span></td>
+          </tr>
+          <tr>
+            <td><span class="col-name">order_status</span></td>
+            <td><span class="col-type">VARCHAR(20)</span></td>
+            <td><span class="nullable-no">NOT NULL</span></td>
+            <td><span class="key-badge none">--</span></td>
+            <td><span class="col-desc">delivered, shipped, canceled, etc.</span></td>
+          </tr>
+          <tr>
+            <td><span class="col-name">order_purchase_timestamp</span></td>
+            <td><span class="col-type">TIMESTAMP</span></td>
+            <td><span class="nullable-no">NOT NULL</span></td>
+            <td><span class="key-badge none">--</span></td>
+            <td><span class="col-desc">When the customer placed the order</span></td>
+          </tr>
+          <tr>
+            <td><span class="col-name">order_approved_at</span></td>
+            <td><span class="col-type">TIMESTAMP</span></td>
+            <td><span class="nullable-yes">NULLABLE</span></td>
+            <td><span class="key-badge none">--</span></td>
+            <td><span class="col-desc">Payment approval timestamp</span></td>
+          </tr>
+          <tr>
+            <td><span class="col-name">order_delivered_carrier_date</span></td>
+            <td><span class="col-type">TIMESTAMP</span></td>
+            <td><span class="nullable-yes">NULLABLE</span></td>
+            <td><span class="key-badge none">--</span></td>
+            <td><span class="col-desc">When order was handed to carrier</span></td>
+          </tr>
+          <tr>
+            <td><span class="col-name">order_delivered_customer_date</span></td>
+            <td><span class="col-type">TIMESTAMP</span></td>
+            <td><span class="nullable-yes">NULLABLE</span></td>
+            <td><span class="key-badge none">--</span></td>
+            <td><span class="col-desc">Actual delivery to customer</span></td>
+          </tr>
+          <tr>
+            <td><span class="col-name">order_estimated_delivery_date</span></td>
+            <td><span class="col-type">TIMESTAMP</span></td>
+            <td><span class="nullable-no">NOT NULL</span></td>
+            <td><span class="key-badge none">--</span></td>
+            <td><span class="col-desc">Estimated delivery shown at purchase</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Relationships -->
+    <h2 class="section-heading">Relationships</h2>
+    <div>
+      <div class="rel-card">
+        <span class="rel-source"><span class="rel-table">orders</span><span class="rel-dot">.</span><span class="rel-col">customer_id</span></span>
+        <span class="rel-arrow">---></span>
+        <span class="rel-target"><span class="rel-table">customers</span><span class="rel-dot">.</span><span class="rel-col">customer_id</span></span>
+        <span class="rel-type">many-to-one</span>
+      </div>
+      <div class="rel-card">
+        <span class="rel-source"><span class="rel-table">order_items</span><span class="rel-dot">.</span><span class="rel-col">order_id</span></span>
+        <span class="rel-arrow">---></span>
+        <span class="rel-target"><span class="rel-table">orders</span><span class="rel-dot">.</span><span class="rel-col">order_id</span></span>
+        <span class="rel-type">many-to-one</span>
+      </div>
+      <div class="rel-card">
+        <span class="rel-source"><span class="rel-table">payments</span><span class="rel-dot">.</span><span class="rel-col">order_id</span></span>
+        <span class="rel-arrow">---></span>
+        <span class="rel-target"><span class="rel-table">orders</span><span class="rel-dot">.</span><span class="rel-col">order_id</span></span>
+        <span class="rel-type">many-to-one</span>
+      </div>
+      <div class="rel-card">
+        <span class="rel-source"><span class="rel-table">reviews</span><span class="rel-dot">.</span><span class="rel-col">order_id</span></span>
+        <span class="rel-arrow">---></span>
+        <span class="rel-target"><span class="rel-table">orders</span><span class="rel-dot">.</span><span class="rel-col">order_id</span></span>
+        <span class="rel-type">many-to-one</span>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+// Table item selection
+document.querySelectorAll('.table-item').forEach(item => {
+  item.addEventListener('click', () => {
+    document.querySelectorAll('.table-item').forEach(i => i.classList.remove('active'));
+    item.classList.add('active');
+  });
+});
+</script>
+
+</body>
+</html>

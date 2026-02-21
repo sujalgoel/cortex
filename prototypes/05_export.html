@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cortex - Export</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: #0B0F1A;
+  color: #E2E8F0;
+  min-height: 100vh;
+  display: flex;
+  overflow: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 24px 24px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  width: 220px;
+  min-width: 220px;
+  height: 100vh;
+  background: #070B14;
+  border-right: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  color: #00E5FF;
+  letter-spacing: 4px;
+  padding: 28px 24px 36px;
+  user-select: none;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 8px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #64748B;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border-left: 2px solid transparent;
+  text-decoration: none;
+  position: relative;
+}
+
+.nav-item:hover {
+  color: #94A3B8;
+  background: rgba(255,255,255,0.02);
+}
+
+.nav-item.active {
+  color: #00E5FF;
+  background: rgba(0,229,255,0.06);
+  border-left-color: #00E5FF;
+}
+
+.nav-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #475569;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 24px 16px 8px 18px;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: 20px 18px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.sidebar-footer-text {
+  font-size: 11px;
+  color: #475569;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ── Main ── */
+.main {
+  flex: 1;
+  height: 100vh;
+  overflow-y: auto;
+  position: relative;
+  z-index: 1;
+}
+
+.main-inner {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 48px 56px;
+}
+
+.page-header {
+  margin-bottom: 36px;
+}
+
+.page-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 26px;
+  color: #E2E8F0;
+  margin-bottom: 6px;
+}
+
+.page-subtitle {
+  font-size: 14px;
+  color: #64748B;
+  font-weight: 400;
+}
+
+/* ── Export Format Cards ── */
+.format-selector {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 36px;
+}
+
+.format-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  padding: 22px 18px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+
+.format-card:hover {
+  border-color: rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.04);
+}
+
+.format-card.active {
+  border-color: #00E5FF;
+  background: rgba(0,229,255,0.04);
+}
+
+.format-icon {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #64748B;
+}
+
+.format-card.active .format-icon {
+  color: #00E5FF;
+}
+
+.format-name {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #E2E8F0;
+  margin-bottom: 4px;
+}
+
+.format-card.active .format-name {
+  color: #00E5FF;
+}
+
+.format-desc {
+  font-size: 12px;
+  color: #475569;
+}
+
+/* ── Section Heading ── */
+.section-heading {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  color: #E2E8F0;
+  margin-bottom: 16px;
+}
+
+/* ── Options ── */
+.form-section {
+  margin-bottom: 36px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: #94A3B8;
+  margin-bottom: 6px;
+  letter-spacing: 0.3px;
+}
+
+.form-input {
+  width: 100%;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: #E2E8F0;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.form-input::placeholder {
+  color: #475569;
+}
+
+.form-input:focus {
+  border-color: #00E5FF;
+}
+
+/* ── Checkboxes ── */
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.checkbox-box {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.03);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+
+.checkbox-item.checked .checkbox-box {
+  background: #00E5FF;
+  border-color: #00E5FF;
+}
+
+.checkbox-check {
+  display: none;
+  color: #0B0F1A;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.checkbox-item.checked .checkbox-check {
+  display: block;
+}
+
+.checkbox-label {
+  font-size: 14px;
+  color: #E2E8F0;
+  font-weight: 500;
+}
+
+.checkbox-desc {
+  font-size: 12px;
+  color: #475569;
+  margin-left: 28px;
+  margin-top: -4px;
+}
+
+/* ── Preview ── */
+.preview-card {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 36px;
+}
+
+.preview-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.preview-row:last-child {
+  border-bottom: none;
+}
+
+.preview-key {
+  font-size: 13px;
+  color: #64748B;
+}
+
+.preview-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: #E2E8F0;
+  font-weight: 500;
+}
+
+/* ── Buttons ── */
+.btn-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.btn-primary {
+  font-family: 'Syne', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  background: #00E5FF;
+  color: #0B0F1A;
+  border: none;
+  border-radius: 6px;
+  padding: 11px 28px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  letter-spacing: 0.3px;
+}
+
+.btn-primary:hover {
+  background: #00ccee;
+  box-shadow: 0 0 20px rgba(0,229,255,0.15);
+}
+
+.btn-secondary {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  background: transparent;
+  color: #94A3B8;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 6px;
+  padding: 11px 24px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-secondary:hover {
+  border-color: rgba(255,255,255,0.24);
+  color: #E2E8F0;
+}
+
+/* Scrollbar */
+.main::-webkit-scrollbar { width: 6px; }
+.main::-webkit-scrollbar-track { background: transparent; }
+.main::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="logo">CORTEX</div>
+  <div class="nav-label">Pipeline</div>
+  <nav class="nav">
+    <a class="nav-item" href="01_connect.html">Connect</a>
+    <a class="nav-item" href="02_schema.html">Schema</a>
+    <a class="nav-item" href="03_quality.html">Quality</a>
+    <a class="nav-item" href="04_chat.html">Chat</a>
+    <a class="nav-item active" href="05_export.html">Export</a>
+  </nav>
+  <div class="nav-label">System</div>
+  <nav class="nav">
+    <a class="nav-item" href="06_settings.html">Settings</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-footer-text">v0.1.0</div>
+  </div>
+</aside>
+
+<!-- Main -->
+<main class="main">
+  <div class="main-inner">
+
+    <!-- Header -->
+    <div class="page-header">
+      <h1 class="page-title">Export Data Dictionary</h1>
+      <p class="page-subtitle">Generate and download your data dictionary in multiple formats.</p>
+    </div>
+
+    <!-- Format Selector -->
+    <div class="format-selector">
+      <div class="format-card active">
+        <div class="format-icon">.md</div>
+        <div class="format-name">Markdown</div>
+        <div class="format-desc">GitHub-ready docs</div>
+      </div>
+      <div class="format-card">
+        <div class="format-icon">.pdf</div>
+        <div class="format-name">PDF</div>
+        <div class="format-desc">Shareable report</div>
+      </div>
+      <div class="format-card">
+        <div class="format-icon">.csv</div>
+        <div class="format-name">CSV</div>
+        <div class="format-desc">Spreadsheet-friendly</div>
+      </div>
+    </div>
+
+    <!-- Content Options -->
+    <h2 class="section-heading">Include in Export</h2>
+    <div class="form-section">
+      <div class="checkbox-group">
+        <div>
+          <div class="checkbox-item checked">
+            <div class="checkbox-box"><span class="checkbox-check">&#10003;</span></div>
+            <span class="checkbox-label">Schema metadata</span>
+          </div>
+          <div class="checkbox-desc">Table names, column types, keys, constraints</div>
+        </div>
+        <div>
+          <div class="checkbox-item checked">
+            <div class="checkbox-box"><span class="checkbox-check">&#10003;</span></div>
+            <span class="checkbox-label">AI-generated descriptions</span>
+          </div>
+          <div class="checkbox-desc">Business-friendly summaries for each table and column</div>
+        </div>
+        <div>
+          <div class="checkbox-item checked">
+            <div class="checkbox-box"><span class="checkbox-check">&#10003;</span></div>
+            <span class="checkbox-label">Data quality report</span>
+          </div>
+          <div class="checkbox-desc">Null rates, uniqueness, freshness scores</div>
+        </div>
+        <div>
+          <div class="checkbox-item">
+            <div class="checkbox-box"><span class="checkbox-check">&#10003;</span></div>
+            <span class="checkbox-label">Relationship diagram</span>
+          </div>
+          <div class="checkbox-desc">Visual ER diagram of table relationships</div>
+        </div>
+        <div>
+          <div class="checkbox-item">
+            <div class="checkbox-box"><span class="checkbox-check">&#10003;</span></div>
+            <span class="checkbox-label">Sample queries</span>
+          </div>
+          <div class="checkbox-desc">AI-suggested SQL queries per table</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Export Preview -->
+    <h2 class="section-heading">Export Summary</h2>
+    <div class="preview-card">
+      <div class="preview-row">
+        <span class="preview-key">Database</span>
+        <span class="preview-val">olist_ecommerce</span>
+      </div>
+      <div class="preview-row">
+        <span class="preview-key">Tables</span>
+        <span class="preview-val">9</span>
+      </div>
+      <div class="preview-row">
+        <span class="preview-key">Total Columns</span>
+        <span class="preview-val">63</span>
+      </div>
+      <div class="preview-row">
+        <span class="preview-key">Format</span>
+        <span class="preview-val">Markdown (.md)</span>
+      </div>
+      <div class="preview-row">
+        <span class="preview-key">Estimated Size</span>
+        <span class="preview-val">~24 KB</span>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="btn-row">
+      <button class="btn-primary">Export &amp; Download</button>
+      <button class="btn-secondary">Preview</button>
+    </div>
+
+  </div>
+</main>
+
+<script>
+// Format card selection
+document.querySelectorAll('.format-card').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('.format-card').forEach(c => c.classList.remove('active'));
+    card.classList.add('active');
+  });
+});
+
+// Checkbox toggle
+document.querySelectorAll('.checkbox-item').forEach(item => {
+  item.addEventListener('click', () => {
+    item.classList.toggle('checked');
+  });
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cortex - Connect a Database</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: #0B0F1A;
+  color: #E2E8F0;
+  min-height: 100vh;
+  display: flex;
+  overflow: hidden;
+}
+
+/* Dot grid pattern */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 24px 24px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ââ Sidebar ââ */
+.sidebar {
+  width: 220px;
+  min-width: 220px;
+  height: 100vh;
+  background: #070B14;
+  border-right: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  color: #00E5FF;
+  letter-spacing: 4px;
+  padding: 28px 24px 36px;
+  user-select: none;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 8px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #64748B;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border-left: 2px solid transparent;
+  text-decoration: none;
+  position: relative;
+}
+
+.nav-item:hover {
+  color: #94A3B8;
+  background: rgba(255,255,255,0.02);
+}
+
+.nav-item.active {
+  color: #00E5FF;
+  background: rgba(0,229,255,0.06);
+  border-left-color: #00E5FF;
+}
+
+.nav-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #475569;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 24px 16px 8px 18px;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: 20px 18px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.sidebar-footer-text {
+  font-size: 11px;
+  color: #475569;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ââ Main ââ */
+.main {
+  flex: 1;
+  height: 100vh;
+  overflow-y: auto;
+  position: relative;
+  z-index: 1;
+}
+
+.main-inner {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 48px 56px;
+}
+
+.page-header {
+  margin-bottom: 36px;
+}
+
+.page-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 26px;
+  color: #E2E8F0;
+  margin-bottom: 6px;
+}
+
+.page-subtitle {
+  font-size: 14px;
+  color: #64748B;
+  font-weight: 400;
+}
+
+/* ââ DB Type Cards ââ */
+.db-selector {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.db-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  padding: 18px 16px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+
+.db-card:hover {
+  border-color: rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.04);
+}
+
+.db-card.active {
+  border-color: #00E5FF;
+  background: rgba(0,229,255,0.04);
+}
+
+.db-card-name {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #E2E8F0;
+  margin-bottom: 4px;
+}
+
+.db-card.active .db-card-name {
+  color: #00E5FF;
+}
+
+.db-card-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: #475569;
+}
+
+/* ââ Form ââ */
+.form-section {
+  margin-bottom: 36px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.form-row.wide {
+  grid-template-columns: 3fr 1fr;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: #94A3B8;
+  margin-bottom: 6px;
+  letter-spacing: 0.3px;
+}
+
+.form-label-optional {
+  color: #475569;
+  font-weight: 400;
+}
+
+.form-input {
+  width: 100%;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: #E2E8F0;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.form-input::placeholder {
+  color: #475569;
+}
+
+.form-input:focus {
+  border-color: #00E5FF;
+}
+
+.btn-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.btn-primary {
+  font-family: 'Syne', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  background: #00E5FF;
+  color: #0B0F1A;
+  border: none;
+  border-radius: 6px;
+  padding: 11px 28px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  letter-spacing: 0.3px;
+}
+
+.btn-primary:hover {
+  background: #00ccee;
+  box-shadow: 0 0 20px rgba(0,229,255,0.15);
+}
+
+.btn-secondary {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  background: transparent;
+  color: #94A3B8;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 6px;
+  padding: 11px 24px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-secondary:hover {
+  border-color: rgba(255,255,255,0.24);
+  color: #E2E8F0;
+}
+
+/* ââ Recent Connections ââ */
+.section-heading {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  color: #E2E8F0;
+  margin-bottom: 16px;
+}
+
+.recent-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.recent-card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px;
+  padding: 14px 20px;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.recent-card:hover {
+  border-color: rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.03);
+}
+
+.recent-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  color: #E2E8F0;
+  min-width: 160px;
+}
+
+.recent-meta {
+  font-size: 13px;
+  color: #64748B;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+
+.recent-meta-sep {
+  color: #1E293B;
+}
+
+.status-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #22C55E;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22C55E;
+  flex-shrink: 0;
+}
+
+/* Scrollbar */
+.main::-webkit-scrollbar {
+  width: 6px;
+}
+.main::-webkit-scrollbar-track {
+  background: transparent;
+}
+.main::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.06);
+  border-radius: 3px;
+}
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="logo">CORTEX</div>
+  <div class="nav-label">Pipeline</div>
+  <nav class="nav">
+    <a class="nav-item active" href="01_connect.html">Connect</a>
+    <a class="nav-item" href="02_schema.html">Schema</a>
+    <a class="nav-item" href="03_quality.html">Quality</a>
+    <a class="nav-item" href="04_chat.html">Chat</a>
+    <a class="nav-item" href="05_export.html">Export</a>
+  </nav>
+  <div class="nav-label">System</div>
+  <nav class="nav">
+    <a class="nav-item" href="06_settings.html">Settings</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-footer-text">v0.1.0</div>
+  </div>
+</aside>
+
+<!-- Main -->
+<main class="main">
+  <div class="main-inner">
+
+    <!-- Header -->
+    <div class="page-header">
+      <h1 class="page-title">Connect a Database</h1>
+      <p class="page-subtitle">Choose your database type and provide connection details.</p>
+    </div>
+
+    <!-- DB Type Selector -->
+    <div class="db-selector">
+      <div class="db-card active">
+        <div class="db-card-name">PostgreSQL</div>
+        <div class="db-card-label">Relational</div>
+      </div>
+      <div class="db-card">
+        <div class="db-card-name">Snowflake</div>
+        <div class="db-card-label">Cloud DW</div>
+      </div>
+      <div class="db-card">
+        <div class="db-card-name">SQL Server</div>
+        <div class="db-card-label">Enterprise</div>
+      </div>
+      <div class="db-card">
+        <div class="db-card-name">SQLite</div>
+        <div class="db-card-label">Embedded</div>
+      </div>
+    </div>
+
+    <!-- Connection Form -->
+    <div class="form-section">
+      <div class="form-row wide">
+        <div class="form-group">
+          <label class="form-label">Host</label>
+          <input class="form-input" type="text" value="localhost">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Port</label>
+          <input class="form-input" type="text" value="5432">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Database Name</label>
+        <input class="form-input" type="text" value="olist_ecommerce">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input class="form-input" type="text" value="postgres">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input class="form-input" type="password" value="12345678">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Schema <span class="form-label-optional">(optional)</span></label>
+        <input class="form-input" type="text" placeholder="public">
+      </div>
+      <div class="btn-row">
+        <button class="btn-primary">Connect &amp; Extract</button>
+        <button class="btn-secondary">Test Connection</button>
+      </div>
+    </div>
+
+    <!-- Recent Connections -->
+    <div>
+      <h2 class="section-heading">Recent Connections</h2>
+      <div class="recent-list">
+        <div class="recent-card">
+          <div class="recent-name">olist_ecommerce</div>
+          <div class="recent-meta">
+            <span>localhost:5432</span>
+            <span class="recent-meta-sep">/</span>
+            <span>9 tables</span>
+            <span class="recent-meta-sep">/</span>
+            <span>last scanned 2 hours ago</span>
+          </div>
+          <div class="status-badge">
+            <span class="status-dot"></span>
+            Connected
+          </div>
+        </div>
+        <div class="recent-card">
+          <div class="recent-name">chinook.db</div>
+          <div class="recent-meta">
+            <span>local file</span>
+            <span class="recent-meta-sep">/</span>
+            <span>11 tables</span>
+            <span class="recent-meta-sep">/</span>
+            <span>last scanned 1 day ago</span>
+          </div>
+          <div class="status-badge">
+            <span class="status-dot"></span>
+            Connected
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+// DB card selection
+document.querySelectorAll('.db-card').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('.db-card').forEach(c => c.classList.remove('active'));
+    card.classList.add('active');
+  });
+});
+
+// Nav item visual feedback (don't block navigation)
+
+</script>
+
+</body>
+</html>
